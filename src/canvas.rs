@@ -8,28 +8,7 @@ use druid::{Color, Data, Event, Lens, Point, Size, Widget};
 
 use crate::GRAPH_COVERAGE;
 
-static RADIUS: f64 = 15.0;
-
-pub struct Canvas {
-    pub x: Vec<Point>,
-    pub y: Vec<Point>,
-    // pub nodes: Vec<(Point, Point)>,
-    pub nodes: BTreeSet<(usize, usize)>,
-    pub node: Option<(usize, Point)>,
-    pub coverage: Option<Vec<(Point, Point)>>,
-}
-
-impl Canvas {
-    pub fn new() -> Self {
-        Canvas {
-            x: Vec::new(),
-            y: Vec::new(),
-            nodes: BTreeSet::new(),
-            node: None,
-            coverage: None,
-        }
-    }
-}
+const RADIUS: f64 = 15.0;
 
 #[derive(Clone, Data, Lens, Debug)]
 pub struct CanvasData {
@@ -46,6 +25,92 @@ impl CanvasData {
     }
 }
 
+fn print_matrix(mat: &Vec<Vec<i32>>) {
+    for row in mat {
+        for val in row {
+            print!("{val} ");
+        }
+        println!()
+    }
+    println!()
+}
+
+pub struct Canvas {
+    pub x: Vec<Point>,
+    pub y: Vec<Point>,
+    pub node: Option<(usize, Point)>,
+    pub nodes: BTreeSet<(usize, usize)>,
+    pub coverage: BTreeSet<(usize, usize)>,
+}
+
+macro_rules! print_mat {
+    ($mat:expr, $out:expr, $inp:expr) => {
+        for i in 0..$out.len() {
+            for j in 0..$inp.len() {
+                print!("{} ", $mat[i][j]);
+            }
+            println!("{}", $out[i])
+        }
+        for j in 0..$inp.len() {
+            print!("{} ", $inp[j])
+        }
+        println!();
+        println!();
+    };
+}
+
+impl Canvas {
+    pub fn new() -> Self {
+        Canvas {
+            x: Vec::new(),
+            y: Vec::new(),
+            nodes: BTreeSet::new(),
+            node: None,
+            coverage: BTreeSet::new(),
+        }
+    }
+    fn compute_coverage(&mut self, data: &mut CanvasData) {
+        let mut mat = vec![vec![0; self.y.len()]; self.x.len()];
+        let mut out = vec![0; self.x.len()]; //  F
+        let mut inp = vec![0; self.y.len()]; //  G
+        for &(i, j) in &self.nodes {
+            mat[i][j] = 1;
+            out[i] += 1;
+            inp[j] += 1;
+        }
+        // check if it is possible to find coverage
+        if out.iter().any(|&v| v == 0) || inp.iter().any(|&v| v == 0) {
+            data.coverage_error = true;
+            return;
+        }
+
+        print_mat!(mat, out, inp);
+        for i in 0..self.x.len() {
+            for j in 0..self.y.len() {
+                if inp[j] > 1 && out[i] > 1 && mat[i][j] == 1 {
+                    mat[i][j] = 0;
+                    out[i] -= 1;
+                    inp[j] -= 1;
+                    // print_mat!(mat, out, inp);
+                }
+            }
+        }
+        if out.iter().sum::<i32>() as usize > self.x.len().max(self.y.len()) {
+            println!("failed to do");
+            data.coverage_error = true;
+            return;
+        }
+        for i in 0..self.x.len() {
+            for j in 0..self.y.len() {
+                if mat[i][j] == 1 {
+                    self.coverage.insert((i, j));
+                }
+            }
+        }
+        data.coverage_error = false;
+    }
+}
+
 impl Widget<CanvasData> for Canvas {
     fn paint(
         &mut self,
@@ -57,36 +122,38 @@ impl Widget<CanvasData> for Canvas {
         ctx.fill(background, &env.get(theme::BACKGROUND_LIGHT));
 
         for &(x, y) in &self.nodes {
-            // ctx.stroke(Line::new(x, y), &Color::RED, 2.0);
-            ctx.stroke(Line::new(self.x[x], self.y[y]), &Color::RED, 2.0);
+            let color = Color::rgb(1.0, 0.5, 0.5);
+            ctx.stroke(Line::new(self.x[x], self.y[y]), &color, 2.0);
         }
         if let Some((x, y)) = self.node {
             ctx.stroke(Line::new(self.x[x], y), &Color::BLACK, 1.0);
         }
-        if let Some(coverage) = &self.coverage {
-            for &(x, y) in coverage {
-                ctx.stroke(Line::new(x, y), &Color::PURPLE, 2.0);
-            }
+        for &(x, y) in &self.coverage {
+            ctx.stroke(Line::new(self.x[x], self.y[y]), &Color::PURPLE, 2.0);
         }
 
         for (i, p) in self.x.iter().enumerate() {
             let ellipse = Ellipse::new(*p, (RADIUS, RADIUS), 0.0);
+            let color = Color::rgb(0.5, 0.5, 1.0);
+
             ctx.fill(ellipse, &env.get(theme::BACKGROUND_LIGHT));
-            ctx.stroke(ellipse, &Color::GREEN, 2.0);
-            let mut layout = TextLayout::<String>::from_text(format!("{i}"));
+            ctx.stroke(ellipse, &color, 2.0);
+            let mut layout = TextLayout::<String>::from_text(format!("{}", i + 1));
             layout.set_font(FontDescriptor::new(FontFamily::SERIF).with_size(RADIUS));
-            layout.set_text_color(Color::GREEN);
+            layout.set_text_color(color);
             layout.rebuild_if_needed(ctx.text(), env);
             let s = layout.size();
             layout.draw(ctx, (p.x - s.width / 2.0, p.y - s.height / 2.0));
         }
         for (i, p) in self.y.iter().enumerate() {
             let ellipse = Ellipse::new(*p, (RADIUS, RADIUS), 0.0);
+            let color = Color::rgb(0.5, 1.0, 0.5);
+
             ctx.fill(ellipse, &env.get(theme::BACKGROUND_LIGHT));
-            ctx.stroke(ellipse, &Color::BLUE, 2.0);
-            let mut layout = TextLayout::<String>::from_text(format!("{i}"));
-            layout.set_font(FontDescriptor::new(FontFamily::SERIF).with_size(10.0));
-            layout.set_text_color(Color::BLUE);
+            ctx.stroke(ellipse, &color, 2.0);
+            let mut layout = TextLayout::<String>::from_text(format!("{}", i + 1));
+            layout.set_font(FontDescriptor::new(FontFamily::SERIF).with_size(RADIUS));
+            layout.set_text_color(color);
             layout.rebuild_if_needed(ctx.text(), env);
             let s = layout.size();
             layout.draw(ctx, (p.x - s.width / 2.0, p.y - s.height / 2.0));
@@ -112,7 +179,7 @@ impl Widget<CanvasData> for Canvas {
         &mut self,
         ctx: &mut druid::widget::prelude::EventCtx,
         event: &druid::widget::prelude::Event,
-        _data: &mut CanvasData,
+        data: &mut CanvasData,
         _env: &druid::widget::prelude::Env,
     ) {
         match event {
@@ -147,6 +214,8 @@ impl Widget<CanvasData> for Canvas {
                         }
                         self.x.push(e.pos);
                     }
+                    self.coverage.clear();
+                    self.compute_coverage(data);
                     ctx.request_paint();
                     ctx.request_layout();
                 }
@@ -177,12 +246,8 @@ impl Widget<CanvasData> for Canvas {
                             } else {
                                 self.nodes.insert((i, j));
                             }
-                            // if self.nodes.contains(&node) {
-                            //     self.nodes =
-                            //         self.nodes.iter().copied().filter(|&n| n != node).collect();
-                            // } else {
-                            //     self.nodes.push(node);
-                            // }
+                            self.coverage.clear();
+                            self.compute_coverage(data);
                             break;
                         }
                     }
@@ -192,10 +257,8 @@ impl Widget<CanvasData> for Canvas {
                 }
                 _ => {}
             },
-            Event::Command(cmd) => {
-                if cmd.is(GRAPH_COVERAGE) {
-                    todo!("not done");
-                }
+            Event::Command(cmd) if cmd.is(GRAPH_COVERAGE) => {
+                self.compute_coverage(data);
             }
             _ => {}
         }

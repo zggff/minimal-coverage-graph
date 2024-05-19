@@ -5,7 +5,7 @@ mod canvas;
 use canvas::{Canvas, CanvasData};
 use druid::{
     widget::{Button, Flex, Label},
-    AppLauncher, Env, Selector, Widget, WidgetExt, WindowDesc,
+    AppLauncher, Env, Key, Selector, Widget, WidgetExt, WindowDesc,
 };
 
 const GRAPH_COVERAGE: Selector = Selector::new("graph_coverage.compute_graph_coverage");
@@ -21,13 +21,21 @@ fn main() {
 
 fn ui_builder() -> impl Widget<CanvasData> {
     let canvas = Canvas::new();
-    let button =
-        Button::new("Zggff").on_click(|ctx, _data, _env| ctx.submit_command(GRAPH_COVERAGE));
-    let label = Label::new(|data: &CanvasData, _env: &Env| format!("{}", data.vertice_type));
-    let controls = Flex::column()
+    let button = Button::new("Найти минимальное покрытие")
+        .on_click(|ctx, _data, _env| ctx.submit_command(GRAPH_COVERAGE));
+    let label = Label::new(|data: &CanvasData, _env: &Env| {
+        if data.coverage_error {
+            "Невозможно найти минимальное покрытие"
+        } else {
+            ""
+        }
+    })
+    .with_line_break_mode(druid::widget::LineBreaking::WordWrap);
+    Flex::column()
         .with_child(button)
         .with_default_spacer()
         .with_child(label)
-        .padding(10.0);
-    Flex::row().with_child(controls).with_child(canvas)
+        .with_default_spacer()
+        .with_child(canvas)
+        .padding(10.0)
 }
