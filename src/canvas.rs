@@ -33,22 +33,6 @@ pub struct Canvas {
     pub coverage: BTreeSet<(usize, usize)>,
 }
 
-macro_rules! print_mat {
-    ($mat:expr, $out:expr, $inp:expr) => {
-        for i in 0..$out.len() {
-            for j in 0..$inp.len() {
-                print!("{} ", $mat[i][j]);
-            }
-            println!("{}", $out[i])
-        }
-        for j in 0..$inp.len() {
-            print!("{} ", $inp[j])
-        }
-        println!();
-        println!();
-    };
-}
-
 impl Canvas {
     pub fn new() -> Self {
         Canvas {
