@@ -5,3 +5,4 @@ target
 *.log
 *.gz
 *.fdb_latexmk
+*.out
