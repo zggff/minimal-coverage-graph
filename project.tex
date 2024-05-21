@@ -18,6 +18,10 @@
 
 \sectionfont{\fontsize{14}{15}\selectfont}
 
+\usepackage{graphicx} 
+\graphicspath{{images/}}
+\usepackage{subcaption}
+
 \title{Нахождение наименьшего покрытия простого графа}
 \author{Максим Гига}
 \date{2024}
@@ -100,6 +104,35 @@
 \section{Тестовые примеры}
 
 \section{Скриншоты программы}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{screenshot1.png}
+    \caption{Выдача ошибки при невозможности
+        нахожения минимального покрытия}
+    \label{fig:failure_example}
+\end{figure}
+
+\begin{figure}[h]
+    \begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=1\textwidth]{screenshot2.png}
+        \caption{Пример 1}
+        \label{fig:subim1}
+    \end{subfigure}
+    \begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=1\textwidth]{screenshot3.png}
+        \caption{Пример 2}
+        \label{fig:screenshot3}
+    \end{subfigure}
+    \begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=1\textwidth]{screenshot4.png}
+        \caption{Пример 3}
+        \label{fig:screenshot4}
+    \end{subfigure}
+    \caption{Успешное нахождение минимального покрытия}
+    \label{fig:success_example}
+\end{figure}
+
 
 \section{Пример прикладной задачи}
 
