@@ -5,14 +5,12 @@ mod canvas;
 use canvas::{Canvas, CanvasData};
 use druid::{
     widget::{Flex, Label},
-    AppDelegate, AppLauncher, Application, DelegateCtx, Env, Selector, Widget, WidgetExt,
-    WindowDesc, WindowId,
+    AppDelegate, AppLauncher, Application, Color, DelegateCtx, Env, Widget, WidgetExt, WindowDesc,
+    WindowId,
 };
 
-const GRAPH_COVERAGE: Selector = Selector::new("graph_coverage.compute_graph_coverage");
-
 fn main() {
-    let main_window = WindowDesc::new(ui_builder());
+    let main_window = WindowDesc::new(ui_builder()).window_size((800.0, 800.0));
     let data = CanvasData::new();
     AppLauncher::with_window(main_window)
         .delegate(Delegate)
@@ -22,6 +20,13 @@ fn main() {
 
 fn ui_builder() -> impl Widget<CanvasData> {
     let canvas = Canvas::new();
+    let instructions = Flex::column()
+        .with_child(Label::new("Правая кнопка мыши - задание вершин"))
+        .with_child(Label::new("Синяя вершина - исходящая"))
+        .with_child(Label::new("Зеленая вершина - входящая"))
+        .with_child(Label::new("Левая кнопка мыши - задание дуг"))
+        .with_child(Label::new("Фиолетовые дуги - минимальное покрытие"));
+
     let label = Label::new(|data: &CanvasData, _env: &Env| {
         if data.coverage_error {
             "Невозможно найти минимальное покрытие"
@@ -29,8 +34,11 @@ fn ui_builder() -> impl Widget<CanvasData> {
             ""
         }
     })
-    .with_line_break_mode(druid::widget::LineBreaking::WordWrap);
+    .with_line_break_mode(druid::widget::LineBreaking::WordWrap)
+    .with_text_color(Color::RED);
     Flex::column()
+        .with_child(instructions)
+        .with_default_spacer()
         .with_child(label)
         .with_default_spacer()
         .with_child(canvas)

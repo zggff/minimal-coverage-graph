@@ -6,8 +6,6 @@ use druid::text::{FontDescriptor, TextLayout};
 use druid::{theme, RenderContext};
 use druid::{Color, Data, Event, Lens, Point, Size, Widget};
 
-use crate::GRAPH_COVERAGE;
-
 const RADIUS: f64 = 15.0;
 
 #[derive(Clone, Data, Lens, Debug)]
@@ -263,9 +261,6 @@ impl Widget<CanvasData> for Canvas {
                 }
                 _ => {}
             },
-            Event::Command(cmd) if cmd.is(GRAPH_COVERAGE) => {
-                self.compute_coverage(data);
-            }
             _ => {}
         }
     }
