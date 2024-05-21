@@ -70,7 +70,7 @@ impl Canvas {
 
         // fix any errors
         let mut i0 = 0;
-        while out.iter().sum::<usize>() > self.x.len().max(self.y.len()) {
+        while i0 < self.x.len() {
             if out[i0] == 1 {
                 i0 += 1;
                 continue;
