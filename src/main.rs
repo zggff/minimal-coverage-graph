@@ -10,7 +10,9 @@ use druid::{
 };
 
 fn main() {
-    let main_window = WindowDesc::new(ui_builder()).window_size((800.0, 800.0));
+    let main_window = WindowDesc::new(ui_builder())
+        .window_size((800.0, 800.0))
+        .title("минимальное покрытие простого графа");
     let data = CanvasData::new();
     AppLauncher::with_window(main_window)
         .delegate(Delegate)
