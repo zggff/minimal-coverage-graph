@@ -25,16 +25,6 @@ impl CanvasData {
     }
 }
 
-fn print_matrix(mat: &Vec<Vec<i32>>) {
-    for row in mat {
-        for val in row {
-            print!("{val} ");
-        }
-        println!()
-    }
-    println!()
-}
-
 pub struct Canvas {
     pub x: Vec<Point>,
     pub y: Vec<Point>,
@@ -70,36 +60,68 @@ impl Canvas {
         }
     }
     fn compute_coverage(&mut self, data: &mut CanvasData) {
-        let mut mat = vec![vec![0; self.y.len()]; self.x.len()];
+        let mut mat = vec![vec![0_u8; self.y.len()]; self.x.len()];
         let mut out = vec![0; self.x.len()]; //  F
         let mut inp = vec![0; self.y.len()]; //  G
+
+        // convert into matrix
         for &(i, j) in &self.nodes {
             mat[i][j] = 1;
             out[i] += 1;
             inp[j] += 1;
         }
+
         // check if it is possible to find coverage
         if out.iter().any(|&v| v == 0) || inp.iter().any(|&v| v == 0) {
             data.coverage_error = true;
             return;
         }
 
-        print_mat!(mat, out, inp);
+        // brute force first part
         for i in 0..self.x.len() {
             for j in 0..self.y.len() {
                 if inp[j] > 1 && out[i] > 1 && mat[i][j] == 1 {
-                    mat[i][j] = 0;
+                    mat[i][j] = 2;
                     out[i] -= 1;
                     inp[j] -= 1;
-                    // print_mat!(mat, out, inp);
                 }
             }
         }
-        if out.iter().sum::<i32>() as usize > self.x.len().max(self.y.len()) {
-            println!("failed to do");
-            data.coverage_error = true;
-            return;
+
+        // fix any errors
+        let mut i0 = 0;
+        while out.iter().sum::<usize>() > self.x.len().max(self.y.len()) {
+            if out[i0] == 1 {
+                i0 += 1;
+                continue;
+            }
+            'top: for j0 in 0..self.y.len() {
+                if mat[i0][j0] != 1 {
+                    continue;
+                }
+                for i1 in 0..self.x.len() {
+                    if mat[i1][j0] != 2 {
+                        continue;
+                    }
+                    for j1 in 0..self.y.len() {
+                        if mat[i1][j1] != 1 {
+                            continue;
+                        }
+                        if inp[j1] == 1 {
+                            continue;
+                        }
+                        out[i0] -= 1;
+                        inp[j1] -= 1;
+                        mat[i0][j0] = 2;
+                        mat[i1][j0] = 1;
+                        mat[i1][j1] = 2;
+                        break 'top;
+                    }
+                }
+            }
         }
+
+        // convert back into correct form
         for i in 0..self.x.len() {
             for j in 0..self.y.len() {
                 if mat[i][j] == 1 {
