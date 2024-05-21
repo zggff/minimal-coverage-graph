@@ -22,6 +22,14 @@
 \graphicspath{{images/}}
 \usepackage{subcaption}
 
+\usepackage{amsmath,bm}
+
+\usepackage{tikz}
+\usepackage{float}
+
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
+
 \title{Задача № 8 \\ 
 Нахождение наименьшего покрытия простого графа}
 \author{Гига Максим М8О-113Б-23}
@@ -77,17 +85,17 @@
           $\sum F_i = \sum G_j > max(m, n)$
           то заменяем последовательно
           в произвольном порядке $0$ каждую из единиц
-          (условливаясь при этом писать $\widehat{1}$ вместо $0$),
+          (условливаясь при этом писать $\circled{1}$ вместо $0$),
           для которой $F_i > 1$ и $G_j > 1$.
     \item В каждой строке с $F_i > 1$ ищем такую
-          $1$, что её столбце найдется
-          такая $\widehat{1}$, что в строке,
-          содержащей эту $\widehat{1}$, есть неотмеченная $1$
-          с $G_j > 1$. Если $G_j > 1$, то найденная $\widehat{1}$
+          $1$, что в её столбце найдется
+          такая $\circled{1}$, что в строке,
+          содержащей эту $\circled{1}$, есть неотмеченная $1$
+          с $G_j > 1$. Если $G_j > 1$, то найденная $\circled{1}$
           заменяется на $1$, а найденные $1$ заменяются на
-          $\widehat{1}$. $F_i$ и $G_j$ обновляются.
+          $\circled{1}$. $F_i$ и $G_j$ обновляются.
           Если, действуя по этому алгоритму,
-          невозможно увеличить число $\widehat{1}$,
+          невозможно увеличить число $\circled{1}$,
           то $1$ дают минимальное покрытие.
 \end{enumerate}
 
@@ -104,9 +112,111 @@
 
 \section{Тестовые примеры}
 
+Пусть простой граф задан булевым матричным представлением $||M||$:
+
+\begin{figure}[H]
+    \centering
+    \begin{tabular}{ c|c|c|c|c| }
+              & $Y_1$ & $Y_2$ & $Y_3$ & $Y_4$ \\
+        \hline
+        $X_1$ & 1     & 1     & 1     & 0     \\
+        \hline
+        $X_2$ & 1     & 1     & 0     & 1     \\
+        \hline
+        $X_3$ & 0     & 0     & 1     & 0     \\
+        \hline
+    \end{tabular}
+    \label{fig:table1}
+    \caption{исходная матрица}
+\end{figure}
+
+Найдем $F_i$ и $G_i$
+
+\begin{figure}[H]
+    \centering
+    \begin{tabular}{ c|c|c|c|c|c }
+              & $Y_1$ & $Y_2$ & $Y_3$ & $Y_4$ & $F_i$ \\
+        \hline
+        $X_1$ & 1     & 1     & 1     & 0     & 3     \\
+        \hline
+        $X_2$ & 1     & 1     & 0     & 1     & 3     \\
+        \hline
+        $X_3$ & 0     & 0     & 1     & 0     & 1     \\
+        \hline
+        $G_j$ & 2     & 2     & 2     & 1     &
+    \end{tabular}
+    \label{fig:FiGj}
+    \caption{$F_i$ и $G_j$}
+\end{figure}
+
+Последовательно заменим $1$ на $\circled{1}$ если $F_i > 1$ и $G_j > 1$
+
+\begin{figure}[H]
+    \centering
+    \begin{tabular}{ c|c|c|c|c|c }
+              & $Y_1$         & $Y_2$         & $Y_3$ & $Y_4$ & $F_i$ \\
+        \hline
+        $X_1$ & $\circled{1}$ & $\circled{1}$ & 1     & 0     & 1     \\
+        \hline
+        $X_2$ & 1             & 1             & 0     & 1     & 3     \\
+        \hline
+        $X_3$ & 0             & 0             & 1     & 0     & 1     \\
+        \hline
+        $G_j$ & 1             & 1             & 2     & 1     &
+    \end{tabular}
+    \label{fig:second_step_complete}
+    \caption{второй этап алгоритма}
+\end{figure}
+
+Далее в $2$ строке находим $1$ - это $M_{21}$. В её
+столбце отмеченная единица $\circled{1}$ - это $M_{11}$
+В её строке неотмеченная единица с $G_j > 1$ - это $M_{13}$:
+$G_3 = 2 > 1$. В $M_{21}$ записываем $\circled{1}$ В $M_{11}$
+записываем $1$. В $M_{13}$ записываем $\circled{1}$.
+$F_1$ и $G_1$ не меняются. $F_2$ и $G_3$ уменьшаются на единицу:
+$F_2 = 2$ и $G_3 = 1$
+
+\begin{figure}[H]
+    \centering
+    \begin{tabular}{ c|c|c|c|c|c }
+              & $Y_1$         & $Y_2$         & $Y_3$         & $Y_4$ & $F_i$ \\
+        \hline
+        $X_1$ & 1             & $\circled{1}$ & $\circled{1}$ & 0     & 1     \\
+        \hline
+        $X_2$ & $\circled{1}$ & 1             & 0             & 1     & 2     \\
+        \hline
+        $X_3$ & 0             & 0             & 1             & 0     & 1     \\
+        \hline
+        $G_j$ & 1             & 1             & 1             & 1     &
+    \end{tabular}
+    \label{fig:third_step_complete}
+    \caption{третий этап алгоритма}
+\end{figure}
+
+Далее операцию продолжить нельзя. Полученное минимальное покрытие:
+
+\begin{figure}[H]
+    \centering
+    \begin{tabular}{ c|c|c|c|c| }
+              & $Y_1$ & $Y_2$ & $Y_3$ & $Y_4$ \\
+        \hline
+        $X_1$ & 1     & 0     & 0     & 0     \\
+        \hline
+        $X_2$ & 0     & 1     & 0     & 1     \\
+        \hline
+        $X_3$ & 0     & 0     & 1     & 0     \\
+        \hline
+    \end{tabular}
+    \label{fig:finished_coverage}
+    \caption{матрица минимального покрытия}
+\end{figure}
+
+данное минимальное покрытие в виде графа можно увидеть на
+Рис. \ref{fig:success_example_1}
+
 \section{Скриншоты программы}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.5\textwidth]{screenshot1.png}
     \caption{Выдача ошибки при невозможности
@@ -114,21 +224,21 @@
     \label{fig:failure_example}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \begin{subfigure}{0.3\textwidth}
         \includegraphics[width=1\textwidth]{screenshot2.png}
         \caption{Пример 1}
-        \label{fig:subim1}
+        \label{fig:success_example_1}
     \end{subfigure}
     \begin{subfigure}{0.3\textwidth}
         \includegraphics[width=1\textwidth]{screenshot3.png}
         \caption{Пример 2}
-        \label{fig:screenshot3}
+        \label{fig:success_example_2}
     \end{subfigure}
     \begin{subfigure}{0.3\textwidth}
         \includegraphics[width=1\textwidth]{screenshot4.png}
         \caption{Пример 3}
-        \label{fig:screenshot4}
+        \label{fig:success_example_3}
     \end{subfigure}
     \caption{Успешное нахождение минимального покрытия}
     \label{fig:success_example}
