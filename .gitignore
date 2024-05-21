@@ -1,1 +1,7 @@
 target
+*.pdf
+*.aux
+*.fls
+*.log
+*.gz
+*.fdb_latexmk
