@@ -11,14 +11,12 @@ const RADIUS: f64 = 15.0;
 #[derive(Clone, Data, Lens, Debug)]
 pub struct CanvasData {
     pub coverage_error: bool,
-    pub vertice_type: bool,
 }
 
 impl CanvasData {
     pub fn new() -> Self {
         CanvasData {
             coverage_error: false,
-            vertice_type: false,
         }
     }
 }
