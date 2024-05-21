@@ -24,6 +24,7 @@ impl CanvasData {
 pub struct Canvas {
     pub x: Vec<Point>,
     pub y: Vec<Point>,
+    pub node_origin_in_x: bool,
     pub node: Option<(usize, Point)>,
     pub nodes: BTreeSet<(usize, usize)>,
     pub coverage: BTreeSet<(usize, usize)>,
@@ -35,6 +36,7 @@ impl Canvas {
             x: Vec::new(),
             y: Vec::new(),
             nodes: BTreeSet::new(),
+            node_origin_in_x: true,
             node: None,
             coverage: BTreeSet::new(),
         }
@@ -133,7 +135,12 @@ impl Widget<CanvasData> for Canvas {
             ctx.stroke(Line::new(self.x[x], self.y[y]), &color, 2.0);
         }
         if let Some((x, y)) = self.node {
-            ctx.stroke(Line::new(self.x[x], y), &Color::BLACK, 1.0);
+            let x = if self.node_origin_in_x {
+                self.x[x]
+            } else {
+                self.y[x]
+            };
+            ctx.stroke(Line::new(x, y), &Color::BLACK, 1.0);
         }
         for &(x, y) in &self.coverage {
             ctx.stroke(Line::new(self.x[x], self.y[y]), &Color::PURPLE, 2.0);
@@ -230,6 +237,14 @@ impl Widget<CanvasData> for Canvas {
                     for (i, &p) in self.x.iter().enumerate() {
                         if e.pos.distance(p) <= RADIUS {
                             self.node = Some((i, p));
+                            self.node_origin_in_x = true;
+                            break;
+                        }
+                    }
+                    for (i, &p) in self.y.iter().enumerate() {
+                        if e.pos.distance(p) <= RADIUS {
+                            self.node = Some((i, p));
+                            self.node_origin_in_x = false;
                             break;
                         }
                     }
@@ -245,13 +260,23 @@ impl Widget<CanvasData> for Canvas {
             }
             Event::MouseUp(e) => match e.button {
                 druid::MouseButton::Left => {
-                    for (j, &p) in self.y.iter().enumerate() {
+                    let iter = if self.node_origin_in_x {
+                        self.y.iter()
+                    } else {
+                        self.x.iter()
+                    };
+                    for (j, &p) in iter.enumerate() {
                         if e.pos.distance(p) <= RADIUS {
                             let (i, _) = self.node.unwrap_or_default();
-                            if self.nodes.contains(&(i, j)) {
-                                self.nodes.remove(&(i, j));
+                            let node = if self.node_origin_in_x {
+                                (i, j)
                             } else {
-                                self.nodes.insert((i, j));
+                                (j, i)
+                            };
+                            if self.nodes.contains(&node) {
+                                self.nodes.remove(&node);
+                            } else {
+                                self.nodes.insert(node);
                             }
                             self.coverage.clear();
                             self.compute_coverage(data);
