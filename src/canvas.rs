@@ -75,6 +75,7 @@ impl Canvas {
                 i0 += 1;
                 continue;
             }
+            let mut found = false;
             'top: for j0 in 0..self.y.len() {
                 if mat[i0][j0] != 1 {
                     continue;
@@ -95,9 +96,13 @@ impl Canvas {
                         mat[i0][j0] = 2;
                         mat[i1][j0] = 1;
                         mat[i1][j1] = 2;
+                        found = true;
                         break 'top;
                     }
                 }
+            }
+            if !found {
+                i0 += 1;
             }
         }
 
