@@ -1,0 +1,67 @@
+\documentclass[12pt]{article}
+
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+\usepackage{polyglossia}
+\setmainlanguage{russian} 
+\setotherlanguage{english}
+\setmainfont{FreeSerif}
+\setsansfont{FreeSans}
+\setmonofont{FreeMono}
+
+\usepackage{sectsty}
+
+\sectionfont{\fontsize{14}{15}\selectfont}
+
+\title{Нахождение наименьшего покрытия простого графа}
+\author{Максим Гига}
+\date{2024}
+\begin{document}
+\maketitle
+
+\section{Теоретические сведения. Описание алгоритма}
+
+Простым графом называют такой граф $G = (X \cup Y, \Gamma)$, что
+\begin{enumerate}
+    \item $X \cap Y = \emptyset$
+    \item $(\forall X_i \in X) \Gamma X_i \subset Y$
+          или $\Gamma^{-1} X_i = \emptyset$
+    \item $(\forall Y_j \in Y) \Gamma Y_j = \emptyset$
+\end{enumerate}
+
+Простой граф будем обозначать $G = (X, Y, \Gamma)$
+
+Простой граф можно определить также как многозначное
+отображение $\Gamma$ конечного множества $X$ в конечное
+множество $Y$
+
+Покрытием простого графа $G = (X, Y, \Gamma) = (X, Y, U)$ называют
+такое подмножество дуг $W \subset U$, что любая вершина графа
+инцидентна по крайней мере одной дуге из $W$
+
+Для того, чтобы простой граф обладал покрытием необходимо и достаточно
+выполнение условий:
+\begin{enumerate}
+    \item $(\forall X_i \in X) \Gamma X_i \ne \emptyset$
+    \item $(\forall Y_j \in Y) \Gamma^{-1} Y_j \ne \emptyset$
+\end{enumerate}
+
+Минимальное покрытие $W_0$ – это покрытие с минимальным $|W_0|$
+то есть с наименьшим числом дуг.
+
+\section{Логическая блок-схема алгоритма}
+
+\section{Оценка сложности алгоритма}
+
+\section{Тестовые примеры. Скриншоты программы}
+
+\section{Скриншоты программы}
+
+\section{Пример прикладной задачи}
+
+\end{document}
