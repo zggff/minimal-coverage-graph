@@ -1,4 +1,6 @@
 use std::collections::BTreeSet;
+use std::sync::Arc;
+use std::time::Duration;
 
 use druid::kurbo::{Ellipse, Line, Rect};
 use druid::piet::FontFamily;
@@ -11,12 +13,18 @@ const RADIUS: f64 = 15.0;
 #[derive(Clone, Data, Lens, Debug)]
 pub struct CanvasData {
     pub coverage_error: bool,
+    pub mat: Arc<Vec<Arc<Vec<u8>>>>,
+    pub x: Arc<Vec<usize>>,
+    pub y: Arc<Vec<usize>>,
 }
 
 impl CanvasData {
     pub fn new() -> Self {
         CanvasData {
             coverage_error: false,
+            mat: Arc::new(Vec::new()),
+            x: Arc::new(Vec::new()),
+            y: Arc::new(Vec::new()),
         }
     }
 }
@@ -182,8 +190,8 @@ impl Widget<CanvasData> for Canvas {
         _env: &druid::widget::prelude::Env,
     ) -> druid::widget::prelude::Size {
         let default_size = Size::new(
-            ctx.window().get_size().width,
-            ctx.window().get_size().height,
+            ctx.window().get_size().width - (30.0 * (self.y.len() + 1) as f64) - 50.0,
+            ctx.window().get_size().height - 185.0,
         );
 
         bc.constrain(default_size)
@@ -210,6 +218,11 @@ impl Widget<CanvasData> for Canvas {
                                     .map(|(x, y)| if x < i { (x, y) } else { (x - 1, y) })
                                     .collect();
                                 self.y.push(self.x.remove(i));
+
+                                Arc::make_mut(&mut data.x).pop();
+                                let val = data.y.len();
+                                Arc::make_mut(&mut data.y).push(val + 1);
+
                                 break 'r;
                             }
                         }
@@ -223,10 +236,18 @@ impl Widget<CanvasData> for Canvas {
                                     .map(|(x, y)| if y < i { (x, y) } else { (x, y - 1) })
                                     .collect();
                                 self.y.remove(i);
+                                Arc::make_mut(&mut data.y).pop();
+
                                 break 'r;
                             }
                         }
                         self.x.push(e.pos);
+                        let val = data.x.len();
+                        Arc::make_mut(&mut data.x).push(val + 1);
+                    }
+                    data.mat = Arc::new(vec![Arc::new(vec![0_u8; self.y.len()]); self.x.len()]);
+                    for &(i, j) in &self.nodes {
+                        Arc::make_mut(&mut Arc::make_mut(&mut data.mat)[i])[j] = 1;
                     }
                     self.coverage.clear();
                     self.compute_coverage(data);
@@ -278,6 +299,8 @@ impl Widget<CanvasData> for Canvas {
                             } else {
                                 self.nodes.insert(node);
                             }
+                            Arc::make_mut(&mut Arc::make_mut(&mut data.mat)[node.0])[node.1] =
+                                if data.mat[node.0][node.1] == 0 { 1 } else { 0 };
                             self.coverage.clear();
                             self.compute_coverage(data);
                             break;
@@ -289,17 +312,32 @@ impl Widget<CanvasData> for Canvas {
                 }
                 _ => {}
             },
+            Event::Timer(_token) => {
+                self.coverage.clear();
+                self.compute_coverage(data);
+                ctx.request_paint();
+                ctx.request_layout();
+            }
             _ => {}
         }
     }
 
     fn update(
         &mut self,
-        _ctx: &mut druid::widget::prelude::UpdateCtx,
+        ctx: &mut druid::widget::prelude::UpdateCtx,
         _old_data: &CanvasData,
-        _data: &CanvasData,
+        data: &CanvasData,
         _env: &druid::widget::prelude::Env,
     ) {
+        self.nodes.clear();
+        for i in 0..self.x.len() {
+            for j in 0..self.y.len() {
+                if data.mat[i][j] == 1 {
+                    self.nodes.insert((i, j));
+                }
+            }
+        }
+        ctx.request_timer(Duration::from_millis(1));
     }
 
     fn lifecycle(
